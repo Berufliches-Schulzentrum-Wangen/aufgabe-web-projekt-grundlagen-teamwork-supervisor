@@ -1,0 +1,59 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: HTML Datei vorhanden
+      id: html-datei-vorhanden
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: HTML Datei vorhanden
+        setup-command: ''
+        command: npx html-validate version1/aufgabe/index.html
+        input: version1/aufgabe/index.html
+        expected-output: 'File: version1/aufgabe/index.html'
+        comparison-method: exact
+        timeout: 10
+        max-score: 10
+    - name: HTML Validierung
+      id: html-validierung
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: HTML Validierung
+        setup-command: npm install html-validate
+        command: npx html-validate version1/aufgabe/index.html
+        input: ''
+        expected-output: ''
+        comparison-method: exact
+        timeout: 10
+        max-score: 15
+    - name: CSS vorhanden
+      id: css-vorhanden
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: CSS vorhanden
+        setup-command: ''
+        command: test -f version1/aufgabe/css/style.css && echo "CSS OK"
+        input: ''
+        expected-output: ''
+        comparison-method: exact
+        timeout: 1
+        max-score: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        HTML-DATEI-VORHANDEN_RESULTS: "${{steps.html-datei-vorhanden.outputs.result}}"
+        HTML-VALIDIERUNG_RESULTS: "${{steps.html-validierung.outputs.result}}"
+        CSS-VORHANDEN_RESULTS: "${{steps.css-vorhanden.outputs.result}}"
+      with:
+        runners: html-datei-vorhanden,html-validierung,css-vorhanden
